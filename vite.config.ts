@@ -18,21 +18,8 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-    },
-  },
-  build: {
+    }, build: {
     chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
-          clerk: ['@clerk/clerk-react'],
-          router: ['react-router-dom'],
-          query: ['@tanstack/react-query'],
-        },
-      },
-    },
+  }
   },
-
 }));

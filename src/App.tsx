@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { useEffect } from "react";
 import { ClerkProvider } from '@clerk/clerk-react';
@@ -15,6 +14,7 @@ import Login from "./pages/Login";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import SignUpPage from "./pages/SignUp";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Initialize the query client
 const queryClient = new QueryClient();
@@ -34,43 +34,47 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key. Please add VITE_CLERK_PUBLISHABLE_KEY to your environment variables.");
 }
 
-// Navigation handler component for custom navigation logic
-const NavigationHandler = () => {
-  const navigate = useNavigate();
+// Component to scroll to top on route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    const handleNavigation = (event: CustomEvent) => {
-      navigate(event.detail.path);
-    };
-
-    window.addEventListener('navigate-to-cart', handleNavigation as EventListener);
-    return () => window.removeEventListener('navigate-to-cart', handleNavigation as EventListener);
-  }, [navigate]);
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   return null;
 };
+
+// Inner component that contains the routing logic
+const AppRoutes = () => (
+  <CartProvider>
+    <ScrollToTop />
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/cart" element={
+        <ProtectedRoute>
+          <Cart />
+        </ProtectedRoute>
+      } />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </CartProvider>
+);
 
 const App = () => (
   <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <CartProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <NavigationHandler />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </CartProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </ClerkProvider>

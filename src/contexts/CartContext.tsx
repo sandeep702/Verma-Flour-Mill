@@ -1,6 +1,7 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 
 interface CartItem {
   id: string;
@@ -25,6 +26,26 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const navigate = useNavigate();
+  const { isSignedIn } = useAuth();
+
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem('verma-flour-cart');
+    if (savedCart) {
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        setCartItems(parsedCart);
+      } catch (error) {
+        console.error('Error loading cart from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Save cart to localStorage whenever cartItems changes
+  useEffect(() => {
+    localStorage.setItem('verma-flour-cart', JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
@@ -48,10 +69,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           description: `${product.name} has been added to your cart`,
           action: (
             <button 
-               onClick={() => {
-                // Use proper navigation instead of window.location.href
-                const event = new CustomEvent('navigate-to-cart');
-                window.dispatchEvent(event);
+              onClick={() => {
+                if (isSignedIn) {
+                  navigate('/cart');
+                } else {
+                  toast({
+                    title: "Login Required",
+                    description: "Please login to view your cart",
+                    action: (
+                      <button 
+                        onClick={() => navigate('/login')}
+                        className="bg-wheat-gold text-white px-3 py-1 rounded text-sm hover:bg-brown-warm transition-colors"
+                      >
+                        Login
+                      </button>
+                    ),
+                  });
+                }
               }}
               className="bg-wheat-gold text-white px-3 py-1 rounded text-sm hover:bg-brown-warm transition-colors"
             >

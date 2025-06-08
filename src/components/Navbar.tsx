@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth, useUser, SignOutButton } from '@clerk/clerk-react';
+import { toast } from '@/hooks/use-toast';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +31,25 @@ const Navbar = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleCartClick = () => {
+    if (isSignedIn) {
+      navigate('/cart');
+    } else {
+      toast({
+        title: "Login Required",
+        description: "Please login to view your cart",
+        action: (
+          <button 
+            onClick={() => navigate('/login')}
+            className="bg-wheat-gold text-white px-3 py-1 rounded text-sm hover:bg-brown-warm transition-colors"
+          >
+            Login
+          </button>
+        ),
+      });
+    }
+  };
 
   return (
     <nav className={`bg-cream sticky h-24 content-center top-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-md' : 'shadow-sm'} border-b border-gray-200`}>
@@ -70,7 +90,7 @@ const Navbar = () => {
               ))}
             </div>
 
-            <Link to="/cart" className="relative">
+            <button onClick={handleCartClick} className="relative">
               <Button className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
                 <ShoppingCart size={16} />
                 Cart ({cartCount})
@@ -80,7 +100,7 @@ const Navbar = () => {
                   {cartCount}
                 </span>
               )}
-            </Link>
+            </button>
 
             <div className="hidden md:flex items-center space-x-3">
               {isLoaded && (
@@ -159,12 +179,12 @@ const Navbar = () => {
                   <item.icon size={18} />
                 </Link>
               ))}
-              <Link to="/cart" onClick={() => setIsOpen(false)} className="block relative">
+              <button onClick={handleCartClick} className="block relative w-full">
                 <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white transition-all">
                   <ShoppingCart size={16} className="mr-2" />
                   Cart ({cartCount})
                 </Button>
-              </Link>
+              </button>
               <div className="border-t pt-4 px-4 space-y-3">
                 {!isSignedIn && (
                   <>
